@@ -10,4 +10,8 @@
     <PackageReference Include="Microsoft.ML.OnnxTransformer" Version="1.6.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="ClassLib\obj\" />
+  </ItemGroup>
+
 </Project>

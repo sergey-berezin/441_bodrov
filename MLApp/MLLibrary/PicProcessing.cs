@@ -57,20 +57,20 @@ namespace ClassLib
 
         }
 
-        async public IAsyncEnumerable<string> ObjectDetecting(string ImFolder)
+        async public IAsyncEnumerable<string> ObjectDetecting(string ImFolder, CancellationTokenSource cancellationSource)
         {
             string[] files = Directory.GetFiles(ImFolder);
             Console.WriteLine($"ObjectDetecting: {ImFolder}");
 
             List<Task <IReadOnlyList<YoloV4Result>>> tasks = new List<Task<IReadOnlyList<YoloV4Result>>>();
-
-            var cancellationSource = new CancellationTokenSource();
+            var model = ModelCreation();
+           
             foreach (string imageName in files)
             {                
                 if (!cancellationSource.Token.IsCancellationRequested)
                 {
                     //Console.WriteLine($"ObjectDetecting: {imageName}");
-                    Task<IReadOnlyList<YoloV4Result>> one_image = OnePictureProcessing(imageName);
+                    Task<IReadOnlyList<YoloV4Result>> one_image = OnePictureProcessing(imageName, model);
                     tasks.Add(one_image);
                 }
 
@@ -81,28 +81,26 @@ namespace ClassLib
 
 
 
-            while (tasks.Count > 0)
+            
+            for (int i = 0; i < tasks.Count; i++)
             {
-                for (int i = 0; i < tasks.Count; i++)
-                {
-                    if (tasks[i].IsCompleted)
-                    {
-                        yield return PicResult(tasks[i].Result, files[i]);
-                        tasks.Remove(tasks[i]);
-                    }
-                }
+                int num = Task.WaitAny(tasks.ToArray());
+                yield return PicResult(tasks[i].Result, files[i]);
+                    
+                    
             }
-            await Task.WhenAll(tasks);            
+           
+                  
 
         }
 
 
-        public async Task<IReadOnlyList<YoloV4Result>> OnePictureProcessing(string filename)
+        public async Task<IReadOnlyList<YoloV4Result>> OnePictureProcessing(string filename, TransformerChain<OnnxTransformer> model)
         {
             //Console.WriteLine("OnePictureProcessing");
             return await Task.Factory.StartNew(() =>
             {
-                var model = ModelCreation();
+               
                 string imageFolder = filename.Substring(0, filename.LastIndexOf(Path.DirectorySeparatorChar));
                 var mlContext = new MLContext();
                 string imageOutputFolder = Path.Combine(imageFolder, "Output");
