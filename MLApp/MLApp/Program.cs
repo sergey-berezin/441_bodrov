@@ -12,11 +12,16 @@ namespace bodrov_app
             Console.WriteLine("Type image folder name");
             string ImageFolder;
             ImageFolder = Console.ReadLine();
-            var cancellationSource = new CancellationTokenSource();
+            
             var PicPro = new PicProcessing();
-            await foreach (var im in PicPro.ObjectDetecting(ImageFolder, cancellationSource))
+            await foreach (var im in PicPro.ObjectDetecting(ImageFolder))
             {
-                Console.WriteLine(im);
+
+                
+                string pic_obj = string.Join(", ", im.l);
+                Console.WriteLine($"There are {pic_obj} on {im.imName}");
+
+
             }
 
 

@@ -22,8 +22,14 @@ namespace ClassLib
 
 
 
+
     public class PicProcessing
     {
+
+
+  
+
+        private CancellationTokenSource cancellationSource = new CancellationTokenSource();
         public TransformerChain<OnnxTransformer> ModelCreation ()
         {
             var mlContext = new MLContext();
@@ -57,7 +63,13 @@ namespace ClassLib
 
         }
 
-        async public IAsyncEnumerable<string> ObjectDetecting(string ImFolder, CancellationTokenSource cancellationSource)
+        public void Cancel()
+        {
+            cancellationSource.Cancel();
+            //а почему нельзя передавать CancellationToken из Program.cs?
+        }
+
+        async public IAsyncEnumerable<PictureResults> ObjectDetecting(string ImFolder)
         {
             string[] files = Directory.GetFiles(ImFolder);
             Console.WriteLine($"ObjectDetecting: {ImFolder}");
@@ -86,8 +98,6 @@ namespace ClassLib
             {
                 int num = Task.WaitAny(tasks.ToArray());
                 yield return PicResult(tasks[i].Result, files[i]);
-                    
-                    
             }
            
                   
@@ -113,28 +123,6 @@ namespace ClassLib
                     // predict
                     var predict = predictionEngine.Predict(new YoloV4BitmapData() { Image = bitmap });
                     var results = predict.GetResults(classesNames, 0.3f, 0.7f);
-
-
-                    using (var g = Graphics.FromImage(bitmap))
-                    {
-                        foreach (var res in results)
-                        {
-                            // draw predictions
-                            var x1 = res.BBox[0];
-                            var y1 = res.BBox[1];
-                            var x2 = res.BBox[2];
-                            var y2 = res.BBox[3];
-                            g.DrawRectangle(Pens.Red, x1, y1, x2 - x1, y2 - y1);
-                            using (var brushes = new SolidBrush(Color.FromArgb(50, Color.Red)))
-                            {
-                                g.FillRectangle(brushes, x1, y1, x2 - x1, y2 - y1);
-                            }
-
-                            g.DrawString(res.Label + " " + res.Confidence.ToString("0.00"),
-                                         new Font("Arial", 12), Brushes.Blue, new PointF(x1, y1));
-                        }
-                        bitmap.Save(Path.Combine(imageOutputFolder, Path.ChangeExtension(filename.Substring(filename.LastIndexOf(Path.DirectorySeparatorChar) + 1), "_processed" + Path.GetExtension(filename))));
-                    }
                     return results;
                 }
 
@@ -142,17 +130,35 @@ namespace ClassLib
         }
     
 
-        public string PicResult(IReadOnlyList<YoloV4Result> res, string im_name)
+        public PictureResults PicResult(IReadOnlyList<YoloV4Result> res, string im_name)
         {
             List<string> r = new List<string>();
             foreach (var i in res)
                 r.Add(i.Label);
+            PictureResults PicResults = new PictureResults(r, im_name);
+            PicResults.l = r;
 
+            return PicResults;
             
-            string pic_obj = string.Join(", ", r);
+
+            //string pic_obj = string.Join(", ", r);
             
-            return $"There are {pic_obj} on {im_name}";
+            //return $"There are {pic_obj} on {im_name}";
         }
+
+    }
+
+
+    public class PictureResults
+    {
+        public List<string> l;
+        public string imName;
+        public PictureResults(List<string> ll, string iName)
+        {
+            l = ll;
+            imName = iName;
+        }
+        
 
     }
 
