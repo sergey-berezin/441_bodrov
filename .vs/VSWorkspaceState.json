@@ -1,9 +1,13 @@
 {
   "ExpandedNodes": [
     "",
-    "\\ConsoleApp",
-    "\\Model_and_library"
+    "\\MLApp",
+    "\\MLApp\\MLApp",
+    "\\MLApp\\MLLibrary",
+    "\\MLApp\\MLLibrary\\ClassLib",
+    "\\MLApp\\MLLibrary\\ClassLib\\DataStructures",
+    "\\UIApp"
   ],
-  "SelectedNode": "\\441_bodrov.sln",
+  "SelectedNode": "\\UIApp",
   "PreviewInSolutionExplorer": false
 }
